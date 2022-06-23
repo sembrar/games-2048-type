@@ -1,11 +1,10 @@
 import tkinter as tk
 from tkinter import ttk
-
+from math import ceil
 from Fibo import Fib
 from Game2048 import TwoZeroFourEight
 from Alphabet import Alphabet
 from Base import LEFT, RIGHT, DOWN, UP, SAVE_IF_NEEDED_AND_QUIT
-
 
 _games_classes = [Fib, TwoZeroFourEight, Alphabet]
 
@@ -91,11 +90,14 @@ class Game(tk.Tk):
         for key in 'w W s S a A d D q Q Up Right Left Down Escape'.split(' '):
             self.canvas.bind("<KeyRelease-%s>" % key, self.process_canvas_user_action)
 
+        self.action_time_span = tk.IntVar(self)
+        self.action_time_span.set(200)
+
     def process_canvas_user_action(self, event):
         if self.board is None:
             return
 
-        print("-"*30)
+        print("-" * 30)
 
         user_action = event.keysym
         print("user-action =", user_action)
@@ -116,7 +118,7 @@ class Game(tk.Tk):
 
         self.board.set_game_end_status()
         print(self.board)
-        self.draw_board()
+        self.unbind_all_canvas_events_move_texts_and_draw_board_and_bind_them_back()
 
     def button_release(self, event):
         if not event.widget.instate(["hover", "!disabled"]):
@@ -229,9 +231,9 @@ class Game(tk.Tk):
 
         tag_font_size_test = 'font-size-test'
 
-        font_size = start_size-1
+        font_size = start_size - 1
 
-        x, y = map(lambda _: int(int(self.canvas.cget(_))/2), ('width', 'height'))
+        x, y = map(lambda _: int(int(self.canvas.cget(_)) / 2), ('width', 'height'))
 
         while True:
             font_size += 1
@@ -251,42 +253,105 @@ class Game(tk.Tk):
         final_font = '"%s" %d' % (base_font, font_size)
         return final_font
 
-    def draw_board(self):
-        tag_on_canvas = 'on-canvas'
-
-        self.canvas.delete(tag_on_canvas)
+    def unbind_all_canvas_events_move_texts_and_draw_board_and_bind_them_back(self):
 
         if self.board is None:
             return
 
+        movements = self.board.get_movements()
+        if len(movements) == 0:
+            return
+
+        def num_steps(x):
+            return abs(x[0] - x[2]) + abs(x[1] - x[3])
+
+        max_movement = max(movements, key=num_steps)
+        steps_in_max_movement = num_steps(max_movement)
+        print("max movement =", max_movement, "with", steps_in_max_movement, "steps")
+
+        # unbind
+        for key in 'w W s S a A d D q Q Up Right Left Down Escape'.split(' '):
+            self.canvas.unbind("<KeyRelease-%s>" % key)
+
+        # move
+
+        frame_time = 40  # msec
+        num_frames = int(ceil(self.action_time_span.get() / frame_time))
+        print("num frames =", num_frames)
+
+        # calculate increment for each text per frame
+        line_width, cell_size = self.get_line_width_cell_size()
+
+        increments = {}
+        for r1, c1, r2, c2 in movements:
+            x1, y1 = self.get_x_y_from(r1, c1, cell_size, line_width)
+            x2, y2 = self.get_x_y_from(r2, c2, cell_size, line_width)
+            increments[(r1, c1)] = (int(ceil((x2 - x1) / num_frames)), int(ceil((y2 - y1) / num_frames)))
+
+        print("movements:", movements, sep='\n')
+        print("increments:", increments, sep='\n')
+
+        def move_texts(frame_num):
+            if frame_num >= num_frames:
+                self.draw_board()
+                return
+            for r1, c1 in increments.keys():
+                self.canvas.move('%d-%d' % (r1, c1), *increments[(r1, c1)])
+            print("frame %d of %d" % (frame_num, num_frames))
+            self.after(frame_time, move_texts, frame_num + 1)
+
+        move_texts(0)
+
+        # bind
+        for key in 'w W s S a A d D q Q Up Right Left Down Escape'.split(' '):
+            self.canvas.bind("<KeyRelease-%s>" % key, self.process_canvas_user_action)
+
+    def get_x_y_from(self, r, c, cell_size, line_width):
+        x = 3 + int((c + 0.5) * (cell_size + line_width))
+        y = 3 + int((r + 0.5) * (cell_size + line_width))
+        return x, y
+
+    def get_line_width_cell_size(self):
         max_size = 400
         line_width = 2
 
         board_size = self.board.get_board_size()
 
-        cell_size = int((max_size - (board_size + 1)*line_width)/board_size)
+        cell_size = int((max_size - (board_size + 1) * line_width) / board_size)
 
-        required_size = (board_size+1)*line_width + board_size*cell_size
+        return line_width, cell_size
+
+    def draw_board(self):
+        tag_on_canvas = 'on-canvas'
+
+        if self.board is None:
+            return
+
+        board_size = self.board.get_board_size()
+        line_width, cell_size = self.get_line_width_cell_size()
+
+        required_size = (board_size + 1) * line_width + board_size * cell_size
 
         self.canvas.configure(width=required_size, height=required_size)
 
-        for i in range(board_size+1):
-            p = 3 + i*(cell_size + line_width)
+        self.canvas.delete(tag_on_canvas)
+
+        for i in range(board_size + 1):
+            p = 3 + i * (cell_size + line_width)
             self.canvas.create_line(p, 0, p, required_size, width=line_width, fill='black', tags=tag_on_canvas)
             self.canvas.create_line(0, p, required_size, p, width=line_width, fill='black', tags=tag_on_canvas)
 
-        texts_and_positions = []
+        texts_and_positions_and_tag_rc = []
         for r in range(board_size):
             for c in range(board_size):
                 text = str(self.board.get_cell(r, c))
                 if text == '0':  # empty
                     continue
-                x = 3 + int((c + 0.5)*(cell_size + line_width))
-                y = 3 + int((r + 0.5)*(cell_size + line_width))
-                texts_and_positions.append((text, x, y))
+                x, y = self.get_x_y_from(r, c, cell_size, line_width)
+                texts_and_positions_and_tag_rc.append((text, x, y, '%d-%d' % (r, c)))
 
         # get good font: todo
-        biggest_text = max(texts_and_positions, key=lambda t: len(t[0]))[0]
+        biggest_text = max(texts_and_positions_and_tag_rc, key=lambda t: len(t[0]))[0]
         final_font = self.get_font_of_good_size_for_text(biggest_text, cell_size, cell_size, 0.75)
 
         if self.board.game_ended():
@@ -297,14 +362,15 @@ class Game(tk.Tk):
         else:
             color = 'black'
 
-        for text, x, y in texts_and_positions:
-            self.canvas.create_text(x, y, text=text, tags=tag_on_canvas, font=final_font, fill=color)
+        for text, x, y, tag_rc in texts_and_positions_and_tag_rc:
+            self.canvas.create_text(x, y, text=text, tags=(tag_on_canvas, tag_rc), font=final_font, fill=color)
 
         extra_height = 50
-        self.canvas.configure(height=required_size+extra_height)
+        self.canvas.configure(height=required_size + extra_height)
         text = "Num moves used = %d" % self.board.get_num_moves_used()
         font = self.get_font_of_good_size_for_text(text, extra_height, required_size, 0.75)
-        self.canvas.create_text(required_size/2, required_size+extra_height/2, text=text, font=font, tags=tag_on_canvas)
+        self.canvas.create_text(required_size / 2, required_size + extra_height / 2, text=text, font=font,
+                                tags=tag_on_canvas)
 
 
 if __name__ == '__main__':

@@ -9,7 +9,6 @@ DOWN = 3
 SAVE_IF_NEEDED_AND_QUIT = 4
 MOVE_NAMES = ["left", "right", "up", "down", "save if needed and quit"]
 
-
 # todo functions and data to be overridden in derived classes are
 # GAME_NAME
 # DEFAULT_TILE
@@ -19,6 +18,8 @@ MOVE_NAMES = ["left", "right", "up", "down", "save if needed and quit"]
 # init if winning_tile is dependent on grid size
 # are_they_merge_able
 # get_merge_result
+
+_USER_NAME_FOR_TEMP_USES = "__temp-user-for-functions__"
 
 
 class Base:
@@ -34,6 +35,7 @@ class Base:
     _KEY_GAME_ENDED = 'key-game-ended'
     _KEY_NUM_MOVES_USED = 'key-num-moves-used'
     _KEY_USER_NAME = 'key-user-name'
+    _KEY_MOVEMENTS = 'key-movements'
 
     def __init__(self, user_name, grid_size=None, winning_tile=None):
 
@@ -45,7 +47,8 @@ class Base:
         self._game_info = {self._KEY_USER_NAME: user_name, self._KEY_BOARD_SIZE: grid_size,
                            self._KEY_WINNING_TILE: winning_tile,
                            self._KEY_BOARD: [[0 for _ in range(grid_size)] for _ in range(grid_size)],
-                           self._KEY_GAME_ENDED: False, self._KEY_NUM_MOVES_USED: 0}
+                           self._KEY_GAME_ENDED: False, self._KEY_NUM_MOVES_USED: 0,
+                           self._KEY_MOVEMENTS: []}
 
         self._set_1_random_tile_to_default_tile()
         self._set_1_random_tile_to_default_tile()
@@ -156,9 +159,9 @@ class Base:
 
     def is_game_lost(self):
         try:
-            o = type(self)("_", self.get_board_size(), self.get_winning_tile())
+            o = type(self)(_USER_NAME_FOR_TEMP_USES, self.get_board_size(), self.get_winning_tile())
         except TypeError:
-            o = type(self)("_", self.get_board_size())
+            o = type(self)(_USER_NAME_FOR_TEMP_USES, self.get_board_size())
 
         for m in (UP, DOWN, RIGHT, LEFT):
 
@@ -205,14 +208,17 @@ class Base:
         # some other object of the same class
 
         if self.game_ended():
+            self.clear_movements()
             return
 
         assert action in (LEFT, RIGHT, UP, DOWN, SAVE_IF_NEEDED_AND_QUIT)
 
+        self.clear_movements()
+
         try:
-            o = type(self)("_", self.get_board_size(), self.get_winning_tile())
+            o = type(self)(_USER_NAME_FOR_TEMP_USES, self.get_board_size(), self.get_winning_tile())
         except TypeError:
-            o = type(self)("_", self.get_board_size())
+            o = type(self)(_USER_NAME_FOR_TEMP_USES, self.get_board_size())
         o._copy_board_from(self)
 
         if action == UP:
@@ -231,6 +237,56 @@ class Base:
         if not o._are_grids_same(self):  # valid move
             self.increment_num_moves_used()
             self._set_1_random_tile_to_default_tile()
+            self.process_movements_after_all_finished(action)
+        else:
+            self.clear_movements()
+
+    def push_to_movements(self, r1c1r2c2):
+        self._game_info[self._KEY_MOVEMENTS].append(r1c1r2c2)
+
+    def clear_movements(self):
+        self._game_info[self._KEY_MOVEMENTS] = []
+
+    def get_movements(self):
+        return self._game_info[self._KEY_MOVEMENTS]
+
+    def process_movements_after_all_finished(self, action):
+        # remove waste movements - those in which cell stayed at the same place
+        # transpose if action is UP or DOWN
+        a_copy = list(self.get_movements())
+
+        if self.get_user_name() != _USER_NAME_FOR_TEMP_USES:
+            print("Movements before processing for user '%s'" % self.get_user_name(), self.get_movements(), sep='\n')
+
+        self.clear_movements()
+        for r1, c1, r2, c2 in a_copy:
+            if r1 != r2 or c1 != c2:
+                if action in (UP, DOWN):
+                    self.push_to_movements((c1, r1, c2, r2))
+                else:
+                    self.push_to_movements((r1, c1, r2, c2))
+
+        if self.get_user_name() != _USER_NAME_FOR_TEMP_USES:
+            print("Cleaned movements:", self.get_movements(), sep='\n')
+
+        # from behind if head of a move is same as tail of moves-ahead => replace tail of the move-ahead with this tail
+        # and don't push this; if not then push this
+        a_copy = list(self.get_movements())
+        self.clear_movements()
+        length = len(a_copy)
+        for i in range(length - 1, -1, -1):
+            hr, hc, tr, tc = a_copy[i]
+            found = False
+            for j in range(i - 1, -1, -1):
+                ahr, ahc, atr, atc = a_copy[j]
+                if atr == hr and atc == hc:
+                    a_copy[j] = (ahr, ahc, tr, tc)
+                    found = True
+            if not found:
+                self.push_to_movements((hr, hc, tr, tc))
+
+        if self.get_user_name() != _USER_NAME_FOR_TEMP_USES:
+            print("Movements after processing for user '%s'" % self.get_user_name(), self.get_movements(), sep='\n')
 
     def _bring_left(self):
         for r in range(self.get_board_size()):
@@ -238,6 +294,7 @@ class Base:
             for c in range(self.get_board_size()):
                 if self.get_cell(r, c) != 0:
                     self.set_cell(r, index, self.get_cell(r, c))
+                    self.push_to_movements((r, c, r, index))
                     index += 1
             for c in range(index, self.get_board_size()):
                 self.set_cell(r, c, 0)
@@ -248,6 +305,7 @@ class Base:
             for c in range(self.get_board_size() - 1, -1, -1):
                 if self.get_cell(r, c) != 0:
                     self.set_cell(r, index, self.get_cell(r, c))
+                    self.push_to_movements((r, c, r, index))
                     index -= 1
             for c in range(index, -1, -1):
                 self.set_cell(r, c, 0)
@@ -262,6 +320,7 @@ class Base:
                     self.set_cell(r, c, 0)
                     self.set_cell(r, c + 1, 0)
                     self.set_cell(r, c, temp)
+                    self.push_to_movements((r, c + 1, r, c))
 
     def _merge_right(self):
         for r in range(self.get_board_size()):
@@ -273,6 +332,7 @@ class Base:
                     self.set_cell(r, c, 0)
                     self.set_cell(r, c - 1, 0)
                     self.set_cell(r, c, temp)
+                    self.push_to_movements((r, c - 1, r, c))
 
     def _transpose(self):
         for r in range(self.get_board_size()):
@@ -283,7 +343,7 @@ class Base:
 
     def play(self):
         while not self.game_ended():
-            os.system("cls")
+            # os.system("cls")
             print(self)
             action = input("Your action: ").strip()
             try:
@@ -317,6 +377,7 @@ class Base:
         return 'data/%s-%s.json' % (self.GAME_NAME, self.get_user_name())
 
     def save_game_if_needed(self):
+        return  # todo remove this return
         if self.game_ended() or self.get_num_moves_used() == 0:
             return
         with open(self._get_game_save_file_rel_path(), 'w') as f:
@@ -333,6 +394,7 @@ class Base:
             json_string = f.read().strip()
             self._game_info = json.loads(json_string)  # type: Base
             self.set_game_end_status()
+        return  # todo remove this return
         os.system('del "%s"' % os.path.abspath(self._get_game_save_file_rel_path()))
 
 
