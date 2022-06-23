@@ -188,6 +188,7 @@ class LeaderBoardDisplay:
         self.scroll_frame.grid(row=1, column=0, columnspan=len(self.details) + 2, sticky='nsew')
         root.rowconfigure(1, weight=1)
         root.columnconfigure(len(self.details), weight=1)
+        self.scroll_frame.configure(bg='')
 
         for detail_index in range(len(self.details)):
             detail = self.details[detail_index]
@@ -286,7 +287,7 @@ class LeaderBoardDisplay:
             key = self._get_key_for_detail(leader_board_detail)
 
             if leader_board_detail_index & 1:
-                color = 'cyan'
+                color = 'light gray'
             else:
                 color = 'light blue'
 
