@@ -147,24 +147,28 @@ _KEY_WINNING_TILE_AS_INT = _KEY_WINNING_TILE + '-as-int'
 
 class ForLeaderBoardDisplay:
 
-    def __init__(self):
+    def __init__(self, game_name):
         # noinspection PyUnresolvedReferences
         self._leader_board_details = []  # type: list[dict]
-        self._retrieve_from_file()
+        self._retrieve_from_file(game_name)
         return
 
-    def _retrieve_from_file(self):
+    def _retrieve_from_file(self, required_game_name):
         try:
             with open(_LEADER_BOARD_FILE) as f:
                 _details = json.loads(f.read().strip())
                 for key in _details:  # type: str
-                    print(key)
-                    self._leader_board_details.append({})
 
                     user_name, game_name, grid_size, winning_tile, winning_tile_as_int = \
                         key.split(_SEPARATOR_IN_LEADER_BOARD_KEYS)
+
+                    if required_game_name != game_name:
+                        continue
+
                     grid_size = int(grid_size)
                     winning_tile_as_int = int(winning_tile_as_int)
+
+                    self._leader_board_details.append({})
 
                     self._leader_board_details[-1][_KEY_USER_NAME] = user_name
                     self._leader_board_details[-1][_KEY_GAME_NAME] = game_name
@@ -186,5 +190,5 @@ if __name__ == '__main__':
     # leader_board.update_leader_board_with("Sagar", "2048", 4, '256', True, 150, int)
     # leader_board.update_leader_board_with("Sagar", "2048", 4, '2048', False, 200, int, '256')
     # print("LeaderBoard:", leader_board, sep='\n')
-    leader_board_display = ForLeaderBoardDisplay()
+    leader_board_display = ForLeaderBoardDisplay("2048")
     print(leader_board_display)
