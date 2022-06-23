@@ -1,13 +1,14 @@
 import tkinter as tk
 from tkinter import ttk
 from math import ceil
+import re
 
 from Fibo import Fib
 from Game2048 import TwoZeroFourEight
 from Alphabet import Alphabet
 
 from Base import LEFT, RIGHT, DOWN, UP, SAVE_IF_NEEDED_AND_QUIT
-from leader_board import LeaderBoardDisplay
+from leader_board import LeaderBoardDisplay, get_user_names
 from tkinter import messagebox
 
 import json
@@ -83,7 +84,7 @@ class Game(tk.Tk):
         self.string_var_cur_game_name.trace('w', self.change_game_choice_options)
         self.string_var_cur_game_name.set(self.game_names[0])
 
-        self.entry_user_name.bind("<KeyRelease>", self.set_continue_game_button_status)
+        self.entry_user_name.bind("<KeyRelease>", self.entry_user_name_changed)
 
         self.button_continue_previous_game.bind("<ButtonRelease-1>", self.button_release)
         self.button_start_new_game.bind("<ButtonRelease-1>", self.button_release)
@@ -111,7 +112,30 @@ class Game(tk.Tk):
         for key in 'w W s S a A d D q Q Up Right Left Down Escape'.split(' '):
             self.canvas.bind("<KeyRelease-%s>" % key, self.process_canvas_user_action)
 
+        self.available_user_names = ''
+        self.entry_user_name.bind("<FocusIn>", self.read_user_names)
+
         self.retrieve_settings()
+
+    def entry_user_name_changed(self, event):
+        cur_str = self.entry_user_name.get()
+        if event.keysym != 'BackSpace':
+            if event.keysym == 'Return':
+                self.entry_user_name.selection_clear()
+            else:
+                matched = re.findall('%s.*' % cur_str, self.available_user_names)
+                if len(matched) > 0:
+                    matched.sort(key=lambda x: len(x))
+                    remaining_string = matched[0][len(cur_str):]
+                    if remaining_string != '':
+                        print("Matched", matched, "Remaining str:", [remaining_string])
+                        self.entry_user_name.insert(len(cur_str), remaining_string)
+                        self.entry_user_name.select_range(len(cur_str), tk.END)
+        self.set_continue_game_button_status()
+
+    def read_user_names(self, *_):
+        self.available_user_names = '\n'.join(get_user_names())
+        print([self.available_user_names])
 
     def process_canvas_user_action(self, event):
         if self.board is None:

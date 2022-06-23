@@ -287,7 +287,7 @@ class LeaderBoardDisplay:
             key = self._get_key_for_detail(leader_board_detail)
 
             if leader_board_detail_index & 1:
-                color = 'light gray'
+                color = '#98c4ff'
             else:
                 color = 'light blue'
 
@@ -430,6 +430,19 @@ class LeaderBoardDisplay:
 
     def __str__(self):
         return json.dumps(self._leader_board_details, indent=2)
+
+
+def get_user_names():
+    try:
+        with open(_LEADER_BOARD_FILE) as f:
+            _details = json.loads(f.read().strip())
+            keys = dict.keys(_details)
+            user_names = set(map(lambda s: s.split(_SEPARATOR_IN_LEADER_BOARD_KEYS)[0], keys))
+            print("Usernames read from LeaderBoardsFile")
+            return user_names
+    except IOError:
+        print("No user-names detected!")
+        return set()
 
 
 if __name__ == '__main__':
