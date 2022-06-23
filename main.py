@@ -115,6 +115,18 @@ class Game(tk.Tk):
         self.available_user_names = ''
         self.entry_user_name.bind("<FocusIn>", self.read_user_names)
 
+        self.update_idletasks()
+        w = self.winfo_width()
+        h = self.winfo_height()
+        sw = self.winfo_screenwidth()
+        sh = self.winfo_screenheight()
+        # print(w, h, sw, sh)
+
+        y = int((sh - h) / 4)
+        x = int((sw - w) / 2.75)
+
+        self.geometry('+%d+%d' % (x, y))
+
         self.retrieve_settings()
 
     def entry_user_name_changed(self, event):
@@ -281,6 +293,8 @@ class Game(tk.Tk):
 
                 # self.entry_user_name.delete(0, tk.END)
                 # self.entry_user_name.insert(0, settings['user_name'])
+                self.entry_user_name.focus_set()
+
                 self.string_var_cur_game_name.set(settings['game_name'])
                 self.string_var_winning_tile.set(settings['winning_tile'])
                 self.int_var_grid_size.set(settings['grid_size'])
