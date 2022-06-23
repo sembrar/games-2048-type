@@ -91,7 +91,7 @@ class Game(tk.Tk):
             self.canvas.bind("<KeyRelease-%s>" % key, self.process_canvas_user_action)
 
         self.action_time_span = tk.IntVar(self)
-        self.action_time_span.set(200)
+        self.action_time_span.set(500)
 
     def process_canvas_user_action(self, event):
         if self.board is None:
@@ -263,7 +263,7 @@ class Game(tk.Tk):
             return
 
         def num_steps(x):
-            return abs(x[0] - x[2]) + abs(x[1] - x[3])
+            return abs(x[0] - movements[x][0]) + abs(x[1] - movements[x][1])
 
         max_movement = max(movements, key=num_steps)
         steps_in_max_movement = num_steps(max_movement)
@@ -283,7 +283,9 @@ class Game(tk.Tk):
         line_width, cell_size = self.get_line_width_cell_size()
 
         increments = {}
-        for r1, c1, r2, c2 in movements:
+        for key in movements:
+            r1, c1 = key
+            r2, c2 = movements[key]
             x1, y1 = self.get_x_y_from(r1, c1, cell_size, line_width)
             x2, y2 = self.get_x_y_from(r2, c2, cell_size, line_width)
             increments[(r1, c1)] = (int(ceil((x2 - x1) / num_frames)), int(ceil((y2 - y1) / num_frames)))
