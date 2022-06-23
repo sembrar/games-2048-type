@@ -148,7 +148,7 @@ _KEY_WINNING_TILE = 'key-winning-tile'
 _KEY_WINNING_TILE_AS_INT = _KEY_WINNING_TILE + '-as-int'
 
 
-class ForLeaderBoardDisplay:
+class LeaderBoardDisplay:
     detail_user_name = 'User name'
     detail_grid_size = 'Grid size'
     detail_winning_tile = 'Winning Tile'
@@ -170,6 +170,10 @@ class ForLeaderBoardDisplay:
         # noinspection PyUnresolvedReferences
         self._leader_board_details = []  # type: list[dict]
         self._retrieve_from_file(game_name)
+
+        if len(self._leader_board_details) == 0:
+            if __name__ != '__main__':
+                raise AttributeError
 
         root = _Tk()
         root.title('LeaderBoard for "%s"' % game_name)
@@ -431,5 +435,5 @@ if __name__ == '__main__':
     # leader_board.update_leader_board_with("Sagar", "2048", 4, '256', True, 150, int)
     # leader_board.update_leader_board_with("Sagar", "2048", 4, '2048', False, 200, int, '256')
     # print("LeaderBoard:", leader_board, sep='\n')
-    leader_board_display = ForLeaderBoardDisplay("2048")
+    leader_board_display = LeaderBoardDisplay("2048")
     # print(leader_board_display)

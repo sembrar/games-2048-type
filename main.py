@@ -7,6 +7,8 @@ from Game2048 import TwoZeroFourEight
 from Alphabet import Alphabet
 
 from Base import LEFT, RIGHT, DOWN, UP, SAVE_IF_NEEDED_AND_QUIT
+from leader_board import LeaderBoardDisplay
+from tkinter import messagebox
 
 import json
 
@@ -98,6 +100,10 @@ class Game(tk.Tk):
         self.canvas = tk.Canvas(_all_container, width=400, height=400)
         self.canvas.grid(row=4, column=0)
 
+        self.button_view_leader_board = ttk.Button(_all_container, text="View Leader Board")
+        self.button_view_leader_board.grid(row=5, column=0, sticky='ew')
+        self.button_view_leader_board.bind("<ButtonRelease-1>", self.button_release)
+
         self.string_var_winning_tile.trace_id = self.string_var_winning_tile.trace('w', self.safe_reset)
         self.int_var_grid_size.trace_id = self.int_var_grid_size.trace(
             'w', self.safe_reset_and_update_winning_tile_if_dependent)
@@ -143,6 +149,11 @@ class Game(tk.Tk):
         elif event.widget == self.button_start_new_game:
             self.new_game()
             self.canvas.focus_set()
+        elif event.widget == self.button_view_leader_board:
+            try:
+                LeaderBoardDisplay(self.string_var_cur_game_name.get())
+            except AttributeError:
+                messagebox.showinfo("No details", "No leader board details to be shown!")
 
     def set_continue_game_button_status(self, *_):
 
