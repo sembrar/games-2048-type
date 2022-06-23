@@ -1,10 +1,14 @@
 import tkinter as tk
 from tkinter import ttk
 from math import ceil
+
 from Fibo import Fib
 from Game2048 import TwoZeroFourEight
 from Alphabet import Alphabet
+
 from Base import LEFT, RIGHT, DOWN, UP, SAVE_IF_NEEDED_AND_QUIT
+
+import json
 
 _games_classes = [Fib, TwoZeroFourEight, Alphabet]
 
@@ -80,8 +84,19 @@ class Game(tk.Tk):
         self.button_continue_previous_game.bind("<ButtonRelease-1>", self.button_release)
         self.button_start_new_game.bind("<ButtonRelease-1>", self.button_release)
 
+        label_frame_action_time_span = ttk.Labelframe(_all_container, text="Action Time Span")
+        label_frame_action_time_span.grid(row=3, column=0)
+
+        self.action_time_span = tk.IntVar(self)
+        tk.Spinbox(master=label_frame_action_time_span, from_=100, to=1000, increment=100,
+                   textvariable=self.action_time_span).grid(row=0, column=0)
+        self.action_time_span.set(500)
+        tk.Label(master=label_frame_action_time_span, text="milli seconds").grid(row=0, column=1)
+
         self.canvas = tk.Canvas(_all_container, width=400, height=400)
-        self.canvas.grid(row=3, column=0)
+        self.canvas.grid(row=4, column=0)
+
+        self.retrieve_settings()
 
         self.string_var_winning_tile.trace_id = self.string_var_winning_tile.trace('w', self.safe_reset)
         self.int_var_grid_size.trace_id = self.int_var_grid_size.trace(
@@ -89,9 +104,6 @@ class Game(tk.Tk):
 
         for key in 'w W s S a A d D q Q Up Right Left Down Escape'.split(' '):
             self.canvas.bind("<KeyRelease-%s>" % key, self.process_canvas_user_action)
-
-        self.action_time_span = tk.IntVar(self)
-        self.action_time_span.set(500)
 
     def process_canvas_user_action(self, event):
         if self.board is None:
@@ -221,7 +233,29 @@ class Game(tk.Tk):
                 user_name, self.int_var_grid_size.get(),
                 type(games[game_name].WINNING_TILE_CHOICES[0])(self.string_var_winning_tile.get()))
 
+    def retrieve_settings(self):
+        try:
+            with open('data/settings.json') as f:
+                settings = json.loads(f.read().strip())
+
+                self.entry_user_name.delete(0, tk.END)
+                self.entry_user_name.insert(0, settings['user_name'])
+                self.string_var_cur_game_name.set(settings['game_name'])
+                self.int_var_grid_size.set(settings['grid_size'])
+                self.string_var_winning_tile.set(settings['winning_tile'])
+                self.action_time_span.set(settings['action_time_span'])
+        except IOError:
+            print("No previous settings available")
+
+    def save_settings(self):
+        settings = {'user_name': self.entry_user_name.get(), 'game_name': self.string_var_cur_game_name.get(),
+                    'grid_size': self.int_var_grid_size.get(), 'winning_tile': self.string_var_winning_tile.get(),
+                    'action_time_span': self.action_time_span.get()}
+        with open('data/settings.json', 'w') as f:
+            f.write(json.dumps(settings, indent=1))
+
     def destroy(self):
+        self.save_settings()
         if self.board is not None:
             self.board.save_game_if_needed()
         super().destroy()
@@ -261,13 +295,6 @@ class Game(tk.Tk):
         movements = self.board.get_movements()
         if len(movements) == 0:
             return
-
-        def num_steps(x):
-            return abs(x[0] - movements[x][0]) + abs(x[1] - movements[x][1])
-
-        max_movement = max(movements, key=num_steps)
-        steps_in_max_movement = num_steps(max_movement)
-        # print("max movement =", max_movement, "with", steps_in_max_movement, "steps")
 
         # unbind
         for key in 'w W s S a A d D q Q Up Right Left Down Escape'.split(' '):
