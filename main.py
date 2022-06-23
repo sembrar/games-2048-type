@@ -279,8 +279,8 @@ class Game(tk.Tk):
             with open('data/settings.json') as f:
                 settings = json.loads(f.read().strip())
 
-                self.entry_user_name.delete(0, tk.END)
-                self.entry_user_name.insert(0, settings['user_name'])
+                # self.entry_user_name.delete(0, tk.END)
+                # self.entry_user_name.insert(0, settings['user_name'])
                 self.string_var_cur_game_name.set(settings['game_name'])
                 self.string_var_winning_tile.set(settings['winning_tile'])
                 self.int_var_grid_size.set(settings['grid_size'])
