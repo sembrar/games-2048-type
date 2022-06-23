@@ -313,7 +313,7 @@ class LeaderBoardDisplay:
 
         elif detail == self.detail_winning_tile:
             _ttkLabel(frame, text=leader_board_detail[_KEY_WINNING_TILE], font=self.font_leader_board_detail,
-                      anchor='n').grid(row=0, column=0, sticky='ew')
+                      anchor='n', foreground='green').grid(row=0, column=0, sticky='ew')
             frame.columnconfigure(0, weight=1)
 
         elif detail == self.detail_games_played_won_lost:
@@ -361,7 +361,7 @@ class LeaderBoardDisplay:
 
         elif detail == self.detail_highest_tile_reached_in_lost_games:
             _ttkLabel(frame,
-                      text=leader_board_detail[_KEY_HIGHEST_TILE_REACHED_IN_LOST_GAMES],
+                      text=leader_board_detail[_KEY_HIGHEST_TILE_REACHED_IN_LOST_GAMES], foreground='red',
                       font=self.font_leader_board_detail, anchor='n').grid(row=0, column=0, sticky='ew')
             frame.columnconfigure(0, weight=1)
 
@@ -371,7 +371,8 @@ class LeaderBoardDisplay:
                       font=self.font_leader_board_detail, anchor='n').grid(row=0, column=0, sticky='ew')
             frame.columnconfigure(0, weight=1)
 
-        elif detail == self.detail_slowest_lose_in_and_highest_tile_reached:
+        elif detail == self.detail_slowest_lose_in_and_highest_tile_reached and \
+                leader_board_detail[_KEY_NUM_MOVES_IN_SLOWEST_LOSE] is not None:
             _ttkLabel(frame, text=leader_board_detail[_KEY_NUM_MOVES_IN_SLOWEST_LOSE],
                       font=self.font_leader_board_detail).grid(row=0, column=1)
 

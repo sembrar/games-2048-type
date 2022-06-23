@@ -150,6 +150,7 @@ class Game(tk.Tk):
             self.new_game()
             self.canvas.focus_set()
         elif event.widget == self.button_view_leader_board:
+            self.canvas.focus_set()
             try:
                 LeaderBoardDisplay(self.string_var_cur_game_name.get())
             except AttributeError:
