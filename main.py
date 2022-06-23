@@ -96,14 +96,14 @@ class Game(tk.Tk):
         self.canvas = tk.Canvas(_all_container, width=400, height=400)
         self.canvas.grid(row=4, column=0)
 
-        self.retrieve_settings()
-
         self.string_var_winning_tile.trace_id = self.string_var_winning_tile.trace('w', self.safe_reset)
         self.int_var_grid_size.trace_id = self.int_var_grid_size.trace(
             'w', self.safe_reset_and_update_winning_tile_if_dependent)
 
         for key in 'w W s S a A d D q Q Up Right Left Down Escape'.split(' '):
             self.canvas.bind("<KeyRelease-%s>" % key, self.process_canvas_user_action)
+
+        self.retrieve_settings()
 
     def process_canvas_user_action(self, event):
         if self.board is None:
@@ -241,8 +241,8 @@ class Game(tk.Tk):
                 self.entry_user_name.delete(0, tk.END)
                 self.entry_user_name.insert(0, settings['user_name'])
                 self.string_var_cur_game_name.set(settings['game_name'])
-                self.int_var_grid_size.set(settings['grid_size'])
                 self.string_var_winning_tile.set(settings['winning_tile'])
+                self.int_var_grid_size.set(settings['grid_size'])
                 self.action_time_span.set(settings['action_time_span'])
         except IOError:
             print("No previous settings available")
@@ -354,6 +354,7 @@ class Game(tk.Tk):
         tag_on_canvas = 'on-canvas'
 
         if self.board is None:
+            self.canvas.delete(tag_on_canvas)
             return
 
         board_size = self.board.get_board_size()
