@@ -97,10 +97,10 @@ class Game(tk.Tk):
         if self.board is None:
             return
 
-        print("-" * 30)
+        # print("-"*30)
 
         user_action = event.keysym
-        print("user-action =", user_action)
+        # print("user-action =", user_action)
 
         if user_action in 'w W Up'.split(' '):
             self.board.perform_action(UP)
@@ -117,7 +117,7 @@ class Game(tk.Tk):
             return
 
         self.board.set_game_end_status()
-        print(self.board)
+        # print(self.board)
         self.unbind_all_canvas_events_move_texts_and_draw_board_and_bind_them_back()
 
     def button_release(self, event):
@@ -185,7 +185,7 @@ class Game(tk.Tk):
             'w', self.safe_reset_and_update_winning_tile_if_dependent)
 
         self.button_continue_previous_game.state(["disabled"])
-        print(self.board)
+        # print(self.board)
         self.draw_board()
 
     def new_game(self):
@@ -193,7 +193,7 @@ class Game(tk.Tk):
         self.button_start_new_game.update_idletasks()
 
         self._set_game()
-        print(self.board)
+        # print(self.board)
         self.draw_board()
 
         self.button_start_new_game.state(["!disabled"])
@@ -201,7 +201,7 @@ class Game(tk.Tk):
 
     def _set_game(self, *_):
 
-        print("-------New game set------")
+        # print("-------New game set------")
 
         user_name = self.entry_user_name.get().strip()  # type: str
         if user_name == "":
@@ -267,7 +267,7 @@ class Game(tk.Tk):
 
         max_movement = max(movements, key=num_steps)
         steps_in_max_movement = num_steps(max_movement)
-        print("max movement =", max_movement, "with", steps_in_max_movement, "steps")
+        # print("max movement =", max_movement, "with", steps_in_max_movement, "steps")
 
         # unbind
         for key in 'w W s S a A d D q Q Up Right Left Down Escape'.split(' '):
@@ -277,7 +277,7 @@ class Game(tk.Tk):
 
         frame_time = 40  # msec
         num_frames = int(ceil(self.action_time_span.get() / frame_time))
-        print("num frames =", num_frames)
+        # print("num frames =", num_frames)
 
         # calculate increment for each text per frame
         line_width, cell_size = self.get_line_width_cell_size()
@@ -290,8 +290,8 @@ class Game(tk.Tk):
             x2, y2 = self.get_x_y_from(r2, c2, cell_size, line_width)
             increments[(r1, c1)] = (int(ceil((x2 - x1) / num_frames)), int(ceil((y2 - y1) / num_frames)))
 
-        print("movements:", movements, sep='\n')
-        print("increments:", increments, sep='\n')
+        # print("movements:", movements, sep='\n')
+        # print("increments:", increments, sep='\n')
 
         def move_texts(frame_num):
             if frame_num >= num_frames:
@@ -299,7 +299,7 @@ class Game(tk.Tk):
                 return
             for r1, c1 in increments.keys():
                 self.canvas.move('%d-%d' % (r1, c1), *increments[(r1, c1)])
-            print("frame %d of %d" % (frame_num, num_frames))
+            # print("frame %d of %d" % (frame_num, num_frames))
             self.after(frame_time, move_texts, frame_num + 1)
 
         move_texts(0)

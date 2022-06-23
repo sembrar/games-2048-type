@@ -235,8 +235,9 @@ class Base:
             print("Never should have come here!!!")  # it won't come here
 
         if not o._are_grids_same(self):  # valid move
-            self.increment_num_moves_used()
-            self._set_1_random_tile_to_default_tile()
+            if action not in (UP, DOWN):  # up or down calls perform_action with LEFT and RIGHT respectively
+                self.increment_num_moves_used()
+                self._set_1_random_tile_to_default_tile()
             self.process_movements_after_all_finished(action)
         else:
             self.clear_movements()
@@ -247,8 +248,8 @@ class Base:
             for c in range(self.get_board_size()):
                 if self.get_cell(r, c) != 0:  # if the block is not empty
                     self._game_info[self._KEY_MOVEMENTS][(r, c)] = (r, c)  # the block moved to the same cell :-)
-        if self.get_user_name() != _USER_NAME_FOR_TEMP_USES:
-            print("After initialization:", self.get_movements(), sep='\n')
+        # if self.get_user_name() != _USER_NAME_FOR_TEMP_USES:
+        #     print("After initialization:", self.get_movements(), sep='\n')
 
     def update_in_movements(self, r1, c1, r2, c2):
         # update if r1, c1 is in some value: note that initially keys and values are same
@@ -268,8 +269,8 @@ class Base:
         # transpose if action is UP or DOWN
         a_copy = dict(self.get_movements())
 
-        if self.get_user_name() != _USER_NAME_FOR_TEMP_USES:
-            print("Movements before processing for user '%s'" % self.get_user_name(), self.get_movements(), sep='\n')
+        # if self.get_user_name() != _USER_NAME_FOR_TEMP_USES:
+        #     print("Movements before processing for user '%s'" % self.get_user_name(), self.get_movements(), sep='\n')
 
         self.clear_movements()
 
@@ -282,8 +283,8 @@ class Base:
                 else:
                     self._game_info[self._KEY_MOVEMENTS][(r1, c1)] = (r2, c2)
 
-        if self.get_user_name() != _USER_NAME_FOR_TEMP_USES:
-            print("Movements after processing for user '%s'" % self.get_user_name(), self.get_movements(), sep='\n')
+        # if self.get_user_name() != _USER_NAME_FOR_TEMP_USES:
+        #     print("Movements after processing for user '%s'" % self.get_user_name(), self.get_movements(), sep='\n')
 
     def _bring_left(self):
         for r in range(self.get_board_size()):
@@ -374,9 +375,9 @@ class Base:
         return 'data/%s-%s.json' % (self.GAME_NAME, self.get_user_name())
 
     def save_game_if_needed(self):
-        return  # todo remove this return
         if self.game_ended() or self.get_num_moves_used() == 0:
             return
+        self.clear_movements()
         with open(self._get_game_save_file_rel_path(), 'w') as f:
             f.write(json.dumps(self._game_info, indent=1))
         print("Game Saved")
@@ -391,7 +392,6 @@ class Base:
             json_string = f.read().strip()
             self._game_info = json.loads(json_string)  # type: Base
             self.set_game_end_status()
-        return  # todo remove this return
         os.system('del "%s"' % os.path.abspath(self._get_game_save_file_rel_path()))
 
 
