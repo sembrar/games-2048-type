@@ -182,7 +182,6 @@ class Game(tk.Tk):
         self.int_var_grid_size.trace_id = self.int_var_grid_size.trace(
             'w', self.safe_reset_and_update_winning_tile_if_dependent)
 
-        print(self.board)
         self.button_continue_previous_game.state(["disabled"])
         print(self.board)
         self.draw_board()
@@ -225,10 +224,35 @@ class Game(tk.Tk):
             self.board.save_game_if_needed()
         super().destroy()
 
+    def get_font_of_good_size_for_text(self, text, max_height, max_width,
+                                       max_percentage=0.5, base_font="Times New Roman", start_size=7):
+
+        tag_font_size_test = 'font-size-test'
+
+        font_size = start_size-1
+
+        x, y = map(lambda _: int(int(self.canvas.cget(_))/2), ('width', 'height'))
+
+        while True:
+            font_size += 1
+            final_font = '"%s" %d' % (base_font, font_size)
+
+            font_test_text_id = self.canvas.create_text(x, y, text=text, font=final_font, tags=tag_font_size_test)
+            x1, y1, x2, y2 = self.canvas.bbox(font_test_text_id)
+            self.canvas.delete(tag_font_size_test)
+
+            text_width = x2 - x1
+            text_height = y2 - y1
+
+            if text_width > max_width * max_percentage or text_height > max_height * max_percentage:
+                font_size -= 1
+                break
+
+        final_font = '"%s" %d' % (base_font, font_size)
+        return final_font
+
     def draw_board(self):
-        print("Drawing board - started")
         tag_on_canvas = 'on-canvas'
-        tag_text = 'text'
 
         self.canvas.delete(tag_on_canvas)
 
@@ -261,21 +285,9 @@ class Game(tk.Tk):
                 y = 3 + int((r + 0.5)*(cell_size + line_width))
                 texts_and_positions.append((text, x, y))
 
-        # find font size
-        base_font = 'Times New Roman'
-        font_size = 7
-        while True:
-            font_size += 1
-            final_font = '"%s" %d' % (base_font, font_size)
-            biggest_text = max(texts_and_positions, key=lambda t: len(t[0]))[0]
-            font_test_text_id = self.canvas.create_text(required_size/2, required_size/2, text=biggest_text,
-                                                        font=final_font, tags=tag_text)
-            x1, y1, x2, y2 = self.canvas.bbox(font_test_text_id)
-            self.canvas.delete(tag_text)
-            font_test_text_size = max(x2 - x1, y2 - y1)
-            if font_test_text_size > cell_size/2:
-                font_size -= 1
-                break
+        # get good font: todo
+        biggest_text = max(texts_and_positions, key=lambda t: len(t[0]))[0]
+        final_font = self.get_font_of_good_size_for_text(biggest_text, cell_size, cell_size, 0.75)
 
         if self.board.game_ended():
             if self.board.is_game_lost():
@@ -286,10 +298,13 @@ class Game(tk.Tk):
             color = 'black'
 
         for text, x, y in texts_and_positions:
-            self.canvas.create_text(x, y, text=text, tags=(tag_on_canvas, tag_text), font=final_font, fill=color)
+            self.canvas.create_text(x, y, text=text, tags=tag_on_canvas, font=final_font, fill=color)
 
-        print("In draw canvas", self.board, sep='\n')
-        print("Drawing board - end")
+        extra_height = 50
+        self.canvas.configure(height=required_size+extra_height)
+        text = "Num moves used = %d" % self.board.get_num_moves_used()
+        font = self.get_font_of_good_size_for_text(text, extra_height, required_size, 0.75)
+        self.canvas.create_text(required_size/2, required_size+extra_height/2, text=text, font=font, tags=tag_on_canvas)
 
 
 if __name__ == '__main__':
