@@ -2,6 +2,8 @@ import random
 import os
 import json
 
+from leader_board import LeaderBoard
+
 LEFT = 0
 RIGHT = 1
 UP = 2
@@ -15,6 +17,7 @@ MOVE_NAMES = ["left", "right", "up", "down", "save if needed and quit"]
 # DEFAULT_GRID_SIZE
 # DEFAULT_WINNING_TILE; set this to None if winning_tile is dependent on grid size (for GUI purpose)
 # WINNING_TILE_CHOICES; set to empty tuple if winning tile is dependent on grid size
+# TILE_STR_TO_INT_CONVERSION; if int does not suffice
 # init if winning_tile is dependent on grid size
 # are_they_merge_able
 # get_merge_result
@@ -28,6 +31,7 @@ class Base:
     DEFAULT_GRID_SIZE = 4
     DEFAULT_WINNING_TILE = 100
     WINNING_TILE_CHOICES = (DEFAULT_WINNING_TILE,)
+    TILE_STR_TO_INT_CONVERSION = int
 
     _KEY_BOARD_SIZE = 'key-board-size'
     _KEY_BOARD = 'key-grid'
@@ -52,6 +56,35 @@ class Base:
 
         self._set_1_random_tile_to_default_tile()
         self._set_1_random_tile_to_default_tile()
+
+        self.saved_in_leader_board = False
+
+    def update_leader_board_if_game_ended(self, force_update=False):
+        if self.saved_in_leader_board:
+            return
+        if not force_update:
+            if not self.game_ended():
+                return
+        self.saved_in_leader_board = True
+        if self.get_num_moves_used() == 0:
+            return
+        if self.is_game_won():
+            LeaderBoard().update_leader_board_with(self.get_user_name(), self.GAME_NAME, self.get_board_size(),
+                                                   self.get_winning_tile(), True, self.get_num_moves_used(),
+                                                   self.TILE_STR_TO_INT_CONVERSION)
+        else:
+            highest_tile_reached = None
+            for r in range(self.get_board_size()):
+                for c in range(self.get_board_size()):
+                    if self.get_cell(r, c) == 0:
+                        continue
+                    if highest_tile_reached is None or \
+                            self.TILE_STR_TO_INT_CONVERSION(highest_tile_reached) < \
+                            self.TILE_STR_TO_INT_CONVERSION(self.get_cell(r, c)):
+                        highest_tile_reached = self.get_cell(r, c)
+            LeaderBoard().update_leader_board_with(self.get_user_name(), self.GAME_NAME, self.get_board_size(),
+                                                   self.get_winning_tile(), False, self.get_num_moves_used(),
+                                                   self.TILE_STR_TO_INT_CONVERSION, highest_tile_reached)
 
     def get_board_size(self):
         return self._game_info[self._KEY_BOARD_SIZE]
@@ -79,6 +112,7 @@ class Base:
 
     def set_game_end_status(self):
         self._game_info[self._KEY_GAME_ENDED] = self.is_game_won() or self.is_game_lost()
+        self.update_leader_board_if_game_ended()
 
     def set_num_moves_used(self, num_moves_used):
         self._game_info[self._KEY_NUM_MOVES_USED] = num_moves_used

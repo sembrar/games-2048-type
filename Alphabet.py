@@ -8,6 +8,7 @@ class Alphabet(Base):
     DEFAULT_WINNING_TILE = 'H'
     DEFAULT_GRID_SIZE = 4
     WINNING_TILE_CHOICES = tuple('BCDEFGHIJKLMNOPQRSTUVWXYZ')
+    TILE_STR_TO_INT_CONVERSION = ord
 
     def are_they_merge_able(self, a, b):
         if super().are_they_merge_able(a, b):

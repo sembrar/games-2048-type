@@ -206,6 +206,9 @@ class Game(tk.Tk):
         self.button_start_new_game.state(["disabled"])
         self.button_start_new_game.update_idletasks()
 
+        if self.board is not None:
+            self.board.update_leader_board_if_game_ended(force_update=True)
+
         self._set_game()
         # print(self.board)
         self.draw_board()
