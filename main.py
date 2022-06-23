@@ -299,13 +299,18 @@ class Game(tk.Tk):
                 self.string_var_winning_tile.set(settings['winning_tile'])
                 self.int_var_grid_size.set(settings['grid_size'])
                 self.action_time_span.set(settings['action_time_span'])
+
+                self.geometry(settings['pos_on_screen'])
         except IOError:
             print("No previous settings available")
 
     def save_settings(self):
+        _geometry_str = self.winfo_geometry()
+        _pos_on_screen = _geometry_str[_geometry_str.index('+'):]
+
         settings = {'user_name': self.entry_user_name.get(), 'game_name': self.string_var_cur_game_name.get(),
                     'grid_size': self.int_var_grid_size.get(), 'winning_tile': self.string_var_winning_tile.get(),
-                    'action_time_span': self.action_time_span.get()}
+                    'action_time_span': self.action_time_span.get(), 'pos_on_screen': _pos_on_screen}
         with open('data/settings.json', 'w') as f:
             f.write(json.dumps(settings, indent=1))
 
