@@ -26,13 +26,9 @@ class Fib(Base):
 
     GAME_NAME = "Fibonacci"
     DEFAULT_TILE = 1
-    DEFAULT_GRID_SIZE = 2
-    DEFAULT_WINNING_TILE = None
-    WINNING_TILE_CHOICES = ()
-
-    def __init__(self, user_name, grid_size=None):
-        super().__init__(user_name, grid_size)
-        self.set_winning_tile(nFib(2 * self.get_board_size() * self.get_board_size()))
+    DEFAULT_GRID_SIZE = 4
+    WINNING_TILE_CHOICES = tuple(map(lambda x: nFib(x), range(4, 4+10)))
+    DEFAULT_WINNING_TILE = WINNING_TILE_CHOICES[0]
 
     def are_they_merge_able(self, a, b):
         if not super().are_they_merge_able(a, b):
