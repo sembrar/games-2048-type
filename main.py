@@ -24,6 +24,7 @@ class Game(tk.Tk):
         super().__init__()
         self.title("Board Game")
         self.iconbitmap("icon.ico")
+        self.resizable(False, False)
 
         _all_container = ttk.Frame(self)
         _all_container.grid(row=0, column=0)
@@ -369,8 +370,8 @@ class Game(tk.Tk):
 
         for i in range(board_size + 1):
             p = 3 + i * (cell_size + line_width)
-            self.canvas.create_line(p, 0, p, required_size, width=line_width, fill='black', tags=tag_on_canvas)
-            self.canvas.create_line(0, p, required_size, p, width=line_width, fill='black', tags=tag_on_canvas)
+            self.canvas.create_line(p, 0, p, required_size, width=line_width, fill='blue', tags=tag_on_canvas)
+            self.canvas.create_line(0, p, required_size, p, width=line_width, fill='blue', tags=tag_on_canvas)
 
         texts_and_positions_and_tag_rc = []
         for r in range(board_size):
