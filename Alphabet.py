@@ -7,7 +7,7 @@ class Alphabet(Base):
     DEFAULT_TILE = 'A'
     DEFAULT_WINNING_TILE = 'H'
     DEFAULT_GRID_SIZE = 4
-    WINNING_TILE_CHOICES = tuple('DEFGHIJKLMNOPQRSTUVWXYZ')
+    WINNING_TILE_CHOICES = tuple('BCDEFGHIJKLMNOPQRSTUVWXYZ')
 
     def are_they_merge_able(self, a, b):
         if super().are_they_merge_able(a, b):
