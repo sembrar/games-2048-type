@@ -23,6 +23,7 @@ class Game(tk.Tk):
 
         super().__init__()
         self.title("Board Game")
+        self.iconbitmap("icon.ico")
 
         _all_container = ttk.Frame(self)
         _all_container.grid(row=0, column=0)

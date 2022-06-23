@@ -5,7 +5,7 @@ class Alphabet(Base):
 
     GAME_NAME = 'Alphabet'
     DEFAULT_TILE = 'A'
-    DEFAULT_WINNING_TILE = 'Z'
+    DEFAULT_WINNING_TILE = 'H'
     DEFAULT_GRID_SIZE = 4
     WINNING_TILE_CHOICES = tuple('DEFGHIJKLMNOPQRSTUVWXYZ')
 
