@@ -7,11 +7,19 @@ def nFib(n):
     :type n: int
     """
     assert n > 0
+
     if n == 1:
         return 0
     if n == 2:
         return 1
-    return nFib(n - 1) + nFib(n - 2)
+
+    f1, f2 = 0, 1
+
+    while n > 2:
+        f1, f2 = f2, f1 + f2
+        n -= 1
+
+    return f2
 
 
 class Fib(Base):

@@ -85,7 +85,8 @@ class Game(tk.Tk):
         self.canvas.grid(row=3, column=0)
 
         self.string_var_winning_tile.trace_id = self.string_var_winning_tile.trace('w', self.safe_reset)
-        self.int_var_grid_size.trace_id = self.int_var_grid_size.trace('w', self.safe_reset)
+        self.int_var_grid_size.trace_id = self.int_var_grid_size.trace(
+            'w', self.safe_reset_and_update_winning_tile_if_dependent)
 
         for key in 'w W s S a A d D q Q Up Right Left Down Escape'.split(' '):
             self.canvas.bind("<KeyRelease-%s>" % key, self.process_canvas_user_action)
@@ -145,6 +146,16 @@ class Game(tk.Tk):
             self.board = None
             self.draw_board()
 
+    def safe_reset_and_update_winning_tile_if_dependent(self, *_):
+        self.safe_reset()
+
+        game_name = self.string_var_cur_game_name.get()
+        if games[game_name].DEFAULT_WINNING_TILE is None:
+            self._set_game()
+            winning_tile = self.board.get_winning_tile()
+            self.board = None
+            self.string_var_winning_tile.set(str(winning_tile))
+
     def change_game_choice_options(self, *_):
 
         self.safe_reset()
@@ -168,7 +179,8 @@ class Game(tk.Tk):
         self.string_var_winning_tile.set(self.board.get_winning_tile())
 
         self.string_var_winning_tile.trace_id = self.string_var_winning_tile.trace('w', self.safe_reset)
-        self.int_var_grid_size.trace_id = self.int_var_grid_size.trace('w', self.safe_reset)
+        self.int_var_grid_size.trace_id = self.int_var_grid_size.trace(
+            'w', self.safe_reset_and_update_winning_tile_if_dependent)
 
         print(self.board)
         self.button_continue_previous_game.state(["disabled"])
